@@ -89,6 +89,12 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
             faces.append(face)
             locs.append((startX, startY, endX, endY))
 
+    # prediction of Mask
+    preds =predict_mask(faces)
+    return (locs, preds)
+
+
+def predict_mask(faces):
     # only make a predictions if at least one face was detected
     if len(faces) > 0:
         # for faster inference we'll make batch predictions on *all*
@@ -96,12 +102,8 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
         # in the above `for` loop
         faces = np.array(faces, dtype="float32")
         preds = maskNet.predict(faces, batch_size=32)
-        
-
-    # return a 2-tuple of the face locations and their corresponding
-    # predictions
-    return (locs, preds)
-
+    return preds
+    
 
 def frame_analysis(frame, faceNet, maskNet):
     
@@ -169,10 +171,14 @@ if __name__ == "__main__":
     print("[INFO] Press 'q' to exit")
 
 
+   ########################################################################################
+   #                        Change the video stream here                                  #
+   ########################################################################################
+
     vs = VideoStream(src=0).start()
     time.sleep(2.0)
 
-    # loop over the frames from the video stream
+    # Loop over the frames from the video stream
     while True:
         frame = vs.read()
         output_frame = frame_analysis(frame, faceNet, maskNet)
