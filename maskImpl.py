@@ -103,6 +103,43 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
     return (locs, preds)
 
 
+def frame_analysis(frame, faceNet, maskNet):
+    
+    # Grab the frame from the threaded video stream and resize it
+    # to have a maximum width of 400 pixels (width is always the greater value) 
+    
+    frame = imutils.resize(frame, width=400)
+
+    # detect faces in the frame and determine if they are wearing a
+    # face mask or not
+    (locs, preds) = detect_and_predict_mask(frame, faceNet, maskNet)
+
+    # loop over the detected face locations and their corresponding
+    # locations
+    for (box, pred) in zip(locs, preds):
+        # unpack the bounding box and predictions
+        (startX, startY, endX, endY) = box
+        (mask, withoutMask) = pred
+
+        # determine the class label and color we'll use to draw
+        # the bounding box and text
+        label = "Mask" if mask > withoutMask else "No Mask"
+        color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
+
+        # include the probability in the label
+        label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
+
+        # display the label and bounding box rectangle on the output
+        # frame
+        cv2.putText(frame, label, (startX, startY - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
+        cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
+
+    return frame
+    
+    
+
+
 if __name__ == "__main__":
     # construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
@@ -129,49 +166,25 @@ if __name__ == "__main__":
 
     # initialize the video stream and allow the camera sensor to warm up
     print("[INFO] starting video stream...")
+    print("[INFO] Press 'q' to exit")
+
+
     vs = VideoStream(src=0).start()
     time.sleep(2.0)
-    print("[INFO] Press 'q' to exit")
+
     # loop over the frames from the video stream
     while True:
-        # Grab the frame from the threaded video stream and resize it
-        # to have a maximum width of 400 pixels (width is always the greater value) 
         frame = vs.read()
-        frame = imutils.resize(frame, width=400)
-
-        # detect faces in the frame and determine if they are wearing a
-        # face mask or not
-        (locs, preds) = detect_and_predict_mask(frame, faceNet, maskNet)
-
-        # loop over the detected face locations and their corresponding
-        # locations
-        for (box, pred) in zip(locs, preds):
-            # unpack the bounding box and predictions
-            (startX, startY, endX, endY) = box
-            (mask, withoutMask) = pred
-
-            # determine the class label and color we'll use to draw
-            # the bounding box and text
-            label = "Mask" if mask > withoutMask else "No Mask"
-            color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
-
-            # include the probability in the label
-            label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
-
-            # display the label and bounding box rectangle on the output
-            # frame
-            cv2.putText(frame, label, (startX, startY - 10),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
-            cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
+        output_frame = frame_analysis(frame, faceNet, maskNet)
 
         # show the output frame
-        cv2.imshow("Frame", frame)
+        cv2.imshow("Frame", output_frame)
         key = cv2.waitKey(1) & 0xFF
 
         # if the `q` key was pressed, break from the loop
         if key == ord("q"):
             break
 
-    # do a bit of cleanup
+    # Clean up all windows
     cv2.destroyAllWindows()
     vs.stop()
