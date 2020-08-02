@@ -1,7 +1,7 @@
 ## 🚀&nbsp; Installation
 1. Clone the repo
 ```
-$ git clone https://github.com/chandrikadeb7/Face-Mask-Detection.git
+$ git clone https://github.com/sandheepp/mask.git
 ```
 
 2. Change your directory to the cloned repo and create a Python virtual environment named 'venv'
@@ -18,5 +18,5 @@ $ pip3 install -r requirements.txt
 Usage:
 
 ```
-$ python detect_mask_video.py
+$ python maskImpl.py
 ```
